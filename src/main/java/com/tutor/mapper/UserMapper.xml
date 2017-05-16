@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tutor.dao.UserDao">
+	<select id="getUserInfo" resultType="com.tutor.model.User"
+		parameterType="String">
+		select user_name as userName,user_phone as
+		userPhone,user_image as userPhoto,user_openid AS userOpenId,user_sex
+		as userSex from
+		t_user where user_openid=#{0};
+	</select>
+	<insert id="addUser" parameterType="com.tutor.model.User">
+		INSERT t_user
+		(id,user_openid,user_name,user_phone,user_image,user_sex,user_register_time)
+		VALUES
+		(NULL,#{userOpenId},#{userName},#{userPhone},#{userPhoto},#{userSex},NOW());
+	</insert>
+	<select id="getPhoneByOpenId" parameterType="String" resultType="String">
+		SELECT user_phone FROM t_user WHERE user_openid=#{0};
+	</select>
+	<update id="updatePhoneByOpenId" parameterType="String">
+		UPDATE t_user SET user_phone = #{1} WHERE user_openid=#{0};
+	</update>
+</mapper>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tutor.dao.OrderDao">
+
+
+
+	<insert id="insertOrder">
+		INSERT
+		t_order(id,user_open⁯id,tutor_id,order_num,order_time,price,manager_id)
+		VALUES(#{0},#{1},#{2},#{3},NOW(),#{4},(SELECT manager_id FROM t_tutor
+		WHERE t_tutor.`id`=#{2}));
+	</insert>
+
+	<select id="getOrderList" resultType="Map">
+		SELECT t1.*
+		,t_tutor.`tutor_name` AS tutorName ,t_tutor.`tutor_title`
+		AS
+		tutorTitle ,
+		t_tutor.`price` AS singlePrice
+		FROM
+		(SELECT
+		t_order.`order_state` AS orderState
+		,t_order.`price`
+		,t_order.`tutor_id` AS tutorId ,t_order.`order_num` AS
+		num,t_order.`id` as orderId
+		FROM t_order WHERE
+		t_order.`user_open⁯id`=#{openId}
+		<choose>
+			<when test="state == 6">
+				and t_order.`order_state`  <![CDATA[ >= ]]>
+				#{state}
+			</when>
+			<otherwise>
+				and t_order.`order_state`=#{state}
+			</otherwise>
+		</choose>
+		ORDER BY
+		t_order.`order_time` DESC ) t1 LEFT JOIN t_tutor ON
+		t1.tutorId
+		=
+		t_tutor.`id` LIMIT #{start},5
+	</select>
+	<select id="getOrderStateById" parameterType="String"
+		resultType="Integer">
+		SELECT order_state FROM t_order WHERE id=#{0} limit 1;
+	</select>
+	<update id="updateStateByIdForWxPay">
+		UPDATE t_order SET order_state = #{1},pay_time=NOW()
+		WHERE id=#{0};
+	</update>
+	<select id="getOrderInfoForCallManage" parameterType="String"
+		resultType="map">
+		SELECT t2.*,t_manager.`admin_email` AS managerMail
+		FROM
+		(SELECT
+		t1.*,t_user.`user_name`,t_user.`user_phone`,t_user.`id` AS
+		user_id
+		FROM
+		(SELECT tutor_name,t_order.`id` AS
+		order_id,order_num,t_order.`price` AS
+		order_price
+		,pay_time,t_order.`user_open⁯id` AS openId,t_order.`manager_id` AS
+		managerId
+		FROM t_order,t_tutor
+		WHERE
+		t_tutor.`id`=t_order.`tutor_id` AND
+		t_order.`id`=#{0} )
+		t1 LEFT JOIN
+		t_user ON
+		t1.openId=t_user.`user_openid`) t2 LEFT JOIN t_manager ON
+		t_manager.`id` = t2.managerId
+	</select>
+	<select id="getOrderInfoByOrderId" resultType="map"
+		parameterType="String">
+		SELECT t1.*,t_tutor.`tutor_name` FROM
+		(
+		SELECT
+		t_order.`price` AS price ,t_order.`order_num` AS
+		period,t_order.`tutor_id`,
+		t_order.`user_open⁯id` AS userOpenId FROM
+		t_order WHERE
+		t_order.`id`=#{0} AND t_order.`order_state`=0 ) t1
+		LEFT
+		JOIN t_tutor ON t_tutor.`id`=t1.tutor_id
+	</select>
+	<update id="updateOrderIdToNewOrderId" parameterType="String">
+		UPDATE t_order SET t_order.`id`=#{1} WHERE t_order.`id`=#{0};
+	</update>
+
+</mapper>
